@@ -8,20 +8,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.material3.ButtonDefaults.textButtonColors
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.dp
 import dev.oceanbit.narwhalnotes.components.PrimarySmallTopAppBar
 import dev.oceanbit.narwhalnotes.components.TertiaryTextField
+import dev.oceanbit.narwhalnotes.data.AppDatabase
+import dev.oceanbit.narwhalnotes.data.Message
 import dev.oceanbit.narwhalnotes.types.MessageData
 import dev.oceanbit.narwhalnotes.ui.theme.NarwhalNotesTheme
 import dev.oceanbit.narwhalnotes.utils.NarwhalTimeUtils
@@ -31,7 +32,7 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Message(
+private fun ChatMessage(
   modifier: Modifier = Modifier,
   message: String,
   sentTime: Date
@@ -50,14 +51,14 @@ private fun Message(
 @Composable
 private fun MessagesList(
   modifier: Modifier = Modifier,
-  messages: List<MessageData>
+  messages: List<Message>
 ) {
   LazyColumn(
     modifier = modifier.padding(16.dp),
     verticalArrangement = Arrangement.spacedBy(16.dp),
   ) {
     items(messages) { (message, date) ->
-      Message(
+      ChatMessage(
         message = message,
         sentTime = date
       )
@@ -67,7 +68,7 @@ private fun MessagesList(
 
 val messages = (0..2).map { i ->
   val msg = LoremIpsum(Random.nextInt(3, 25)).values.joinToString(" ");
-  MessageData(
+  Message(
     msg,
     Date()
   )
@@ -77,14 +78,18 @@ val messages = (0..2).map { i ->
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MessageScreen() {
+fun MessageScreen(db: AppDatabase? = null) {
 
   var currentText by remember { mutableStateOf("") }
-  val messagesList = remember { messages.toMutableStateList() };
+  val messagesList = remember {
+    db?.messageDao()?.getAll()?.toMutableStateList() ?: messages.toMutableStateList()
+  };
 
   fun sendMessage() {
-    messagesList.add(MessageData(currentText, Date()))
-    currentText = ""
+    val newMsg = Message(message = currentText, sent = Date());
+    messagesList.add(newMsg);
+    db?.messageDao()?.insertMessage(newMsg);
+    currentText = "";
   }
 
   Scaffold(
@@ -123,9 +128,11 @@ fun MessageScreen() {
           onValueChange = { value -> currentText = value },
           modifier = Modifier.weight(1f)
         )
-        TextButton(colors = textButtonColors(
-          contentColor = MaterialTheme.colorScheme.onTertiary
-        ), onClick = ::sendMessage ) {
+        TextButton(
+          colors = textButtonColors(
+            contentColor = MaterialTheme.colorScheme.onTertiary
+          ), onClick = ::sendMessage
+        ) {
           Icon(Icons.Filled.Send, "Send the message")
         }
       }
