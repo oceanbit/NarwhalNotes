@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Send
@@ -28,6 +30,7 @@ import dev.oceanbit.narwhalnotes.utils.NarwhalTimeUtils
 import dev.oceanbit.narwhalnotes.viewmodels.MessageListViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.oceanbit.narwhalnotes.R
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 import java.util.*
 
@@ -53,13 +56,17 @@ private fun ChatMessage(
 @Composable
 private fun MessagesList(
   modifier: Modifier = Modifier,
-  messages: List<Message>
+  messages: List<Message>,
+  state: LazyListState?
 ) {
   LazyColumn(
+    state = state ?: LazyListState(),
     modifier = modifier.padding(16.dp),
     verticalArrangement = Arrangement.spacedBy(16.dp),
   ) {
-    items(messages) { (message, date) ->
+    items(messages, key = {
+      item -> item.uid
+    }) { (message, date) ->
       ChatMessage(
         message = message,
         sentTime = date
@@ -73,7 +80,8 @@ private fun MessagesList(
 fun MessageScreenUI(
   messages: List<Message>,
   sendMessage: () -> Unit,
-  currentText: MutableState<String>
+  currentText: MutableState<String>,
+  listState: LazyListState? = null
 ) {
   Scaffold(
     topBar = {
@@ -98,7 +106,7 @@ fun MessageScreenUI(
       )
     },
     content = { innerPadding ->
-      MessagesList(messages = messages, modifier = Modifier.padding(innerPadding))
+      MessagesList(messages = messages, modifier = Modifier.padding(innerPadding), state = listState)
     },
     bottomBar = {
       BottomAppBar(
@@ -128,11 +136,16 @@ fun MessageScreen(
   viewModel: MessageListViewModel = viewModel()
 ) {
   var currentText = remember { mutableStateOf("") }
+  val listState = rememberLazyListState()
+  val coroutineScope = rememberCoroutineScope()
 
   fun sendMessage() {
     val newMsg = Message(message = currentText.value, sent = Date())
     viewModel.sendMessage(newMsg)
     currentText.value = ""
+    coroutineScope.launch {
+      listState.animateScrollToItem(index = viewModel.messages.value!!.size + 1)
+    }
   }
 
   val messages by viewModel.messages.observeAsState()
@@ -140,7 +153,8 @@ fun MessageScreen(
   MessageScreenUI(
     sendMessage = ::sendMessage,
     currentText = currentText,
-    messages = messages ?: emptyList()
+    messages = messages ?: emptyList(),
+    listState = listState
   )
 }
 
