@@ -118,8 +118,8 @@ fun MessageScreen(
         }
       )
     },
-    content = { _ ->
-      messages?.let { MessagesList(messages = it) }
+    content = { innerPadding ->
+      messages?.let { MessagesList(messages = it, modifier = Modifier.padding(innerPadding)) }
     },
     bottomBar = {
       BottomAppBar(
