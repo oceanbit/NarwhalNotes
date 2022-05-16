@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import dev.oceanbit.narwhalnotes.screens.MessageScreen
 import dev.oceanbit.narwhalnotes.ui.theme.NarwhalNotesTheme
 
 class MainActivity : ComponentActivity() {
@@ -16,13 +17,5 @@ class MainActivity : ComponentActivity() {
                 MessageScreen()
             }
         }
-    }
-}
-
-@Preview()
-@Composable
-fun DefaultPreview() {
-    NarwhalNotesTheme {
-        MessageScreen()
     }
 }
