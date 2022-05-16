@@ -92,10 +92,12 @@ fun MessageScreen(db: AppDatabase? = null) {
     currentText = "";
   }
 
+  val isDBPresent = db != null;
+
   Scaffold(
     topBar = {
       PrimarySmallTopAppBar(
-        title = { Text("NarwhalNotes") },
+        title = { Text("NarwhalNotes $isDBPresent") },
         navigationIcon = {
           IconButton(onClick = { /* doSomething() */ }) {
             Icon(

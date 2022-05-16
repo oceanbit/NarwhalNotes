@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
     val db = Room.databaseBuilder(
       applicationContext,
       AppDatabase::class.java, "database-name"
-    ).build()
+    ).allowMainThreadQueries().build()
 
     setContent {
       NarwhalNotesTheme {
