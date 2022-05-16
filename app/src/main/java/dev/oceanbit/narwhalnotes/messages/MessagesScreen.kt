@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.material3.ButtonDefaults.textButtonColors
 import androidx.compose.runtime.*
@@ -55,28 +56,36 @@ private fun MessagesList(
     modifier = modifier.padding(16.dp),
     verticalArrangement = Arrangement.spacedBy(16.dp),
   ) {
-    items(messages) { message ->
+    items(messages) { (message, date) ->
       Message(
-        message = message.message,
-        sentTime = message.date
+        message = message,
+        sentTime = date
       )
     }
   }
 }
 
+val messages = (0..2).map { i ->
+  val msg = LoremIpsum(Random.nextInt(3, 25)).values.joinToString(" ");
+  MessageData(
+    msg,
+    Date()
+  )
+}
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MessageScreen() {
-  val messages = (0..16).map { i ->
-    val msg = LoremIpsum(Random.nextInt(3, 25)).values.joinToString(" ");
-    MessageData(
-      msg,
-      Date()
-    )
-  }
 
-  var currentText by rememberSaveable { mutableStateOf("") };
+  var currentText by remember { mutableStateOf("") }
+  val messagesList = remember { messages.toMutableStateList() };
+
+  fun sendMessage() {
+    messagesList.add(MessageData(currentText, Date()))
+    currentText = ""
+  }
 
   Scaffold(
     topBar = {
@@ -85,8 +94,8 @@ fun MessageScreen() {
         navigationIcon = {
           IconButton(onClick = { /* doSomething() */ }) {
             Icon(
-              imageVector = Icons.Filled.Menu,
-              contentDescription = "Localized description"
+              imageVector = Icons.Filled.Settings,
+              contentDescription = "Settings"
             )
           }
         },
@@ -94,14 +103,14 @@ fun MessageScreen() {
           IconButton(onClick = { /* doSomething() */ }) {
             Icon(
               imageVector = Icons.Filled.Search,
-              contentDescription = "Localized description"
+              contentDescription = "Search through your notes"
             )
           }
         }
       )
     },
     content = { _ ->
-      MessagesList(messages = messages)
+      MessagesList(messages = messagesList)
     },
     bottomBar = {
       BottomAppBar(
@@ -116,7 +125,7 @@ fun MessageScreen() {
         )
         TextButton(colors = textButtonColors(
           contentColor = MaterialTheme.colorScheme.onTertiary
-        ), onClick = { /*TODO*/ }) {
+        ), onClick = ::sendMessage ) {
           Icon(Icons.Filled.Send, "Send the message")
         }
       }
