@@ -136,7 +136,7 @@ fun MessageScreen(
   viewModel: MessageListViewModel = viewModel()
 ) {
   var currentText = remember { mutableStateOf("") }
-  val listState = rememberLazyListState()
+  val listState = rememberLazyListState(Int.MAX_VALUE)
   val coroutineScope = rememberCoroutineScope()
 
   fun sendMessage() {
