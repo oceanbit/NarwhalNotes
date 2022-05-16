@@ -10,8 +10,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MessageListViewModel @Inject constructor(
-  private val messageRepository: MessageRepository
+  messageRepository: MessageRepository
 ) : ViewModel() {
+  private val messageRepository = messageRepository
   fun sendMessage(message: Message) {
     viewModelScope.launch {
       messageRepository.createMessage(message)

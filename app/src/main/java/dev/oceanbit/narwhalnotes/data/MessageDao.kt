@@ -12,8 +12,8 @@ interface MessageDao {
   fun getMessages(): Flow<List<Message>>
 
   @Insert
-  fun insertMessage(message: Message)
+  suspend fun insertMessage(message: Message)
 
   @Delete
-  fun deleteMessage(user: Message)
+  suspend fun deleteMessage(user: Message)
 }
