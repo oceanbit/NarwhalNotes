@@ -1,6 +1,7 @@
 package dev.oceanbit.narwhalnotes.messages
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.material3.ButtonDefaults.textButtonColors
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,13 +43,12 @@ import java.util.*
 private fun ChatMessage(
   modifier: Modifier = Modifier,
   message: String,
-  sentTime: Date
+  sentTime: Date,
+  selected: Boolean,
+  onSelected: () -> Unit,
 ) {
   Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    var selected = remember {
-      mutableStateOf(false)
-    }
-    SelectableCard(modifier = Modifier.fillMaxWidth(), selected = selected) {
+    SelectableCard(modifier = Modifier.fillMaxWidth(), selected = selected, onSelected = onSelected) {
       Text(text = message, modifier = Modifier.padding(16.dp))
     }
     Text(
@@ -61,6 +62,7 @@ private fun ChatMessage(
 private fun MessagesList(
   modifier: Modifier = Modifier,
   messages: List<Message>,
+  selectedMessages: MutableList<Long>,
   state: LazyListState?
 ) {
   LazyColumn(
@@ -68,12 +70,17 @@ private fun MessagesList(
     modifier = modifier.padding(16.dp),
     verticalArrangement = Arrangement.spacedBy(16.dp),
   ) {
-    items(messages, key = {
-      item -> item.uid
-    }) { (message, date) ->
+    items(messages, { item -> item.uid }) { item ->
+      val selected = selectedMessages.contains(item.uid)
       ChatMessage(
-        message = message,
-        sentTime = date
+        message = item.message,
+        sentTime = item.sent,
+        selected = selected,
+        onSelected = {
+          // Do not remove this, otherwise `selected` is inside of a closure
+          val selected = selectedMessages.contains(item.uid)
+          if (selected) selectedMessages.remove(item.uid) else selectedMessages.add(item.uid)
+        }
       )
     }
   }
@@ -83,6 +90,7 @@ private fun MessagesList(
 @Composable
 fun MessageScreenUI(
   messages: List<Message>,
+  selectedMessages: MutableList<Long>,
   sendMessage: () -> Unit,
   currentText: MutableState<String>,
   listState: LazyListState? = null
@@ -110,7 +118,12 @@ fun MessageScreenUI(
       )
     },
     content = { innerPadding ->
-      MessagesList(messages = messages, modifier = Modifier.padding(innerPadding), state = listState)
+      MessagesList(
+        messages = messages,
+        modifier = Modifier.padding(innerPadding),
+        state = listState,
+        selectedMessages = selectedMessages
+      )
     },
     bottomBar = {
       BottomAppBar(
@@ -139,7 +152,8 @@ fun MessageScreenUI(
 fun MessageScreen(
   viewModel: MessageListViewModel = viewModel()
 ) {
-  var currentText = remember { mutableStateOf("") }
+  var currentText = rememberSaveable { mutableStateOf("") }
+  var selectedMessages = remember { mutableStateListOf<Long>() }
   val listState = rememberLazyListState(Int.MAX_VALUE)
   val coroutineScope = rememberCoroutineScope()
 
@@ -158,7 +172,8 @@ fun MessageScreen(
     sendMessage = ::sendMessage,
     currentText = currentText,
     messages = messages ?: emptyList(),
-    listState = listState
+    listState = listState,
+    selectedMessages = selectedMessages
   )
 }
 
@@ -166,7 +181,8 @@ fun MessageScreen(
 @Composable
 fun MessagesPreview() {
   NarwhalNotesTheme {
-    var currentText = remember { mutableStateOf("") }
+    var currentText = rememberSaveable { mutableStateOf("") }
+    var selectedMessages = remember { mutableStateListOf<Long>() }
 
     val messages = (0..2).map { i ->
       val msg = LoremIpsum(Random.nextInt(3, 25)).values.joinToString(" ")
@@ -177,6 +193,11 @@ fun MessagesPreview() {
       )
     }
 
-    MessageScreenUI(messages = messages, currentText = currentText, sendMessage = {})
+    MessageScreenUI(
+      messages = messages,
+      currentText = currentText,
+      sendMessage = {},
+      selectedMessages = selectedMessages
+    )
   }
 }
