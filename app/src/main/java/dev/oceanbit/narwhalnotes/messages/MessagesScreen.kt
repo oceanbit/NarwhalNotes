@@ -14,18 +14,18 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.material3.ButtonDefaults.textButtonColors
 import androidx.compose.runtime.*
-import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.dp
 import dev.oceanbit.narwhalnotes.components.PrimarySmallTopAppBar
 import dev.oceanbit.narwhalnotes.components.TertiaryTextField
-import dev.oceanbit.narwhalnotes.data.AppDatabase
 import dev.oceanbit.narwhalnotes.data.Message
-import dev.oceanbit.narwhalnotes.types.MessageData
 import dev.oceanbit.narwhalnotes.ui.theme.NarwhalNotesTheme
 import dev.oceanbit.narwhalnotes.utils.NarwhalTimeUtils
+import dev.oceanbit.narwhalnotes.viewmodels.MessageListViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlin.random.Random
 import java.util.*
 
@@ -78,26 +78,28 @@ val messages = (0..2).map { i ->
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MessageScreen(db: AppDatabase? = null) {
+fun MessageScreen(
+  viewModel: MessageListViewModel = viewModel()
+) {
 
   var currentText by remember { mutableStateOf("") }
-  val messagesList = remember {
-    db?.messageDao()?.getAll()?.toMutableStateList() ?: messages.toMutableStateList()
-  };
+
+  val currentList by lazy {
+    viewModel.messages
+  }
+
+  val messages by viewModel.messages.observeAsState();
 
   fun sendMessage() {
     val newMsg = Message(message = currentText, sent = Date());
-    messagesList.add(newMsg);
-    db?.messageDao()?.insertMessage(newMsg);
+    viewModel.sendMessage(newMsg);
     currentText = "";
   }
-
-  val isDBPresent = db != null;
 
   Scaffold(
     topBar = {
       PrimarySmallTopAppBar(
-        title = { Text("NarwhalNotes $isDBPresent") },
+        title = { Text("NarwhalNotes") },
         navigationIcon = {
           IconButton(onClick = { /* doSomething() */ }) {
             Icon(
@@ -117,7 +119,7 @@ fun MessageScreen(db: AppDatabase? = null) {
       )
     },
     content = { _ ->
-      MessagesList(messages = messagesList)
+      messages?.let { MessagesList(messages = it) }
     },
     bottomBar = {
       BottomAppBar(
