@@ -1,7 +1,5 @@
 package dev.oceanbit.narwhalnotes.messages
 
-import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,17 +36,17 @@ import kotlin.random.Random
 import java.util.*
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChatMessage(
   modifier: Modifier = Modifier,
   message: String,
   sentTime: Date,
   selected: Boolean,
-  onSelected: () -> Unit,
+  onLongPress: () -> Unit,
+  onPress: () -> Unit,
 ) {
   Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    SelectableCard(modifier = Modifier.fillMaxWidth(), selected = selected, onSelected = onSelected) {
+    SelectableCard(modifier = Modifier.fillMaxWidth(), selected = selected, onLongPress = onLongPress, onPress = onPress) {
       Text(text = message, modifier = Modifier.padding(16.dp))
     }
     Text(
@@ -76,10 +74,17 @@ private fun MessagesList(
         message = item.message,
         sentTime = item.sent,
         selected = selected,
-        onSelected = {
-          // Do not remove this, otherwise `selected` is inside of a closure
-          val selected = selectedMessages.contains(item.uid)
-          if (selected) selectedMessages.remove(item.uid) else selectedMessages.add(item.uid)
+        onPress = {
+          // Do not move this out of this block, otherwise they're inside of a closure and never update
+          val selectModeEnabled = selectedMessages.size != 0
+          val selectedLocal = selectedMessages.contains(item.uid)
+          if (selectModeEnabled) {
+            if (selectedLocal) selectedMessages.remove(item.uid) else selectedMessages.add(item.uid)
+          }
+        },
+        onLongPress = {
+          val selectModeEnabled = selectedMessages.size != 0
+          if (!selectModeEnabled) selectedMessages.add(item.uid)
         }
       )
     }
@@ -152,8 +157,8 @@ fun MessageScreenUI(
 fun MessageScreen(
   viewModel: MessageListViewModel = viewModel()
 ) {
-  var currentText = rememberSaveable { mutableStateOf("") }
-  var selectedMessages = remember { mutableStateListOf<Long>() }
+  val currentText = rememberSaveable { mutableStateOf("") }
+  val selectedMessages = remember { mutableStateListOf<Long>() }
   val listState = rememberLazyListState(Int.MAX_VALUE)
   val coroutineScope = rememberCoroutineScope()
 
@@ -181,8 +186,8 @@ fun MessageScreen(
 @Composable
 fun MessagesPreview() {
   NarwhalNotesTheme {
-    var currentText = rememberSaveable { mutableStateOf("") }
-    var selectedMessages = remember { mutableStateListOf<Long>() }
+    val currentText = rememberSaveable { mutableStateOf("") }
+    val selectedMessages = remember { mutableStateListOf<Long>() }
 
     val messages = (0..2).map { i ->
       val msg = LoremIpsum(Random.nextInt(3, 25)).values.joinToString(" ")
