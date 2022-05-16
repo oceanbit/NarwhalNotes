@@ -30,6 +30,7 @@ import dev.oceanbit.narwhalnotes.utils.NarwhalTimeUtils
 import dev.oceanbit.narwhalnotes.viewmodels.MessageListViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.oceanbit.narwhalnotes.R
+import dev.oceanbit.narwhalnotes.components.SelectableCard
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 import java.util.*
@@ -43,7 +44,10 @@ private fun ChatMessage(
   sentTime: Date
 ) {
   Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    var selected = remember {
+      mutableStateOf(false)
+    }
+    SelectableCard(modifier = Modifier.fillMaxWidth(), selected = selected) {
       Text(text = message, modifier = Modifier.padding(16.dp))
     }
     Text(
@@ -164,11 +168,12 @@ fun MessagesPreview() {
   NarwhalNotesTheme {
     var currentText = remember { mutableStateOf("") }
 
-    val messages = (0..2).map {
+    val messages = (0..2).map { i ->
       val msg = LoremIpsum(Random.nextInt(3, 25)).values.joinToString(" ")
       Message(
         msg,
-        Date()
+        Date(),
+        i.toLong()
       )
     }
 

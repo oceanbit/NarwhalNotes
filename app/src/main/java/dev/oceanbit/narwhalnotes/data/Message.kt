@@ -8,9 +8,10 @@ import java.util.*
 @Entity
 data class Message(
   @ColumnInfo(name = "message") val message: String,
-  @ColumnInfo(name = "sent") val sent: Date
+  @ColumnInfo(name = "sent") val sent: Date,
+  val uidInput: Long? = null
 ) {
   @PrimaryKey(autoGenerate = true)
   @ColumnInfo(name = "uid")
-  var uid: Long = 0
+  var uid: Long = uidInput ?: 0
 }

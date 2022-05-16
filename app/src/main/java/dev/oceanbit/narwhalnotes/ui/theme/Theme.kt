@@ -18,6 +18,8 @@ import androidx.core.view.ViewCompat
 private val DarkColorScheme = darkColorScheme(
   // Headerbar
   primary = Purple400,
+  // Inverted background
+  inversePrimary = Purple200,
   // Message background
   secondary = Purple700,
   // Date background
@@ -34,6 +36,8 @@ private val DarkColorScheme = darkColorScheme(
 private val LightColorScheme = lightColorScheme(
   // Headerbar
   primary = Purple600,
+  // Selected message
+  inversePrimary = Purple700,
   // Message background
   secondary = Purple200,
   // Date background
