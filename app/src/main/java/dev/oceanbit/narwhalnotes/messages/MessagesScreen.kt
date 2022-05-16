@@ -16,6 +16,7 @@ import androidx.compose.material3.ButtonDefaults.textButtonColors
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.dp
@@ -26,6 +27,7 @@ import dev.oceanbit.narwhalnotes.ui.theme.NarwhalNotesTheme
 import dev.oceanbit.narwhalnotes.utils.NarwhalTimeUtils
 import dev.oceanbit.narwhalnotes.viewmodels.MessageListViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dev.oceanbit.narwhalnotes.R
 import kotlin.random.Random
 import java.util.*
 
@@ -66,36 +68,13 @@ private fun MessagesList(
   }
 }
 
-val messages = (0..2).map { i ->
-  val msg = LoremIpsum(Random.nextInt(3, 25)).values.joinToString(" ");
-  Message(
-    msg,
-    Date()
-  )
-}
-
-
 @OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MessageScreen(
-  viewModel: MessageListViewModel = viewModel()
+fun MessageScreenUI(
+  messages: List<Message>,
+  sendMessage: () -> Unit,
+  currentText: MutableState<String>
 ) {
-
-  var currentText by remember { mutableStateOf("") }
-
-  val currentList by lazy {
-    viewModel.messages
-  }
-
-  val messages by viewModel.messages.observeAsState();
-
-  fun sendMessage() {
-    val newMsg = Message(message = currentText, sent = Date());
-    viewModel.sendMessage(newMsg);
-    currentText = "";
-  }
-
   Scaffold(
     topBar = {
       PrimarySmallTopAppBar(
@@ -104,7 +83,7 @@ fun MessageScreen(
           IconButton(onClick = { /* doSomething() */ }) {
             Icon(
               imageVector = Icons.Filled.Settings,
-              contentDescription = "Settings"
+              contentDescription = stringResource(R.string.messages_settings_icon_label)
             )
           }
         },
@@ -112,14 +91,14 @@ fun MessageScreen(
           IconButton(onClick = { /* doSomething() */ }) {
             Icon(
               imageVector = Icons.Filled.Search,
-              contentDescription = "Search through your notes"
+              contentDescription = stringResource(R.string.messages_search_icon_label)
             )
           }
         }
       )
     },
     content = { innerPadding ->
-      messages?.let { MessagesList(messages = it, modifier = Modifier.padding(innerPadding)) }
+      MessagesList(messages = messages, modifier = Modifier.padding(innerPadding))
     },
     bottomBar = {
       BottomAppBar(
@@ -127,27 +106,58 @@ fun MessageScreen(
         contentColor = MaterialTheme.colorScheme.onTertiary
       ) {
         TertiaryTextField(
-          value = currentText,
-          placeholder = { Text("Message") },
-          onValueChange = { value -> currentText = value },
+          value = currentText.value,
+          placeholder = { Text(stringResource(R.string.send_message_placeholder)) },
+          onValueChange = { value -> currentText.value = value },
           modifier = Modifier.weight(1f)
         )
         TextButton(
           colors = textButtonColors(
             contentColor = MaterialTheme.colorScheme.onTertiary
-          ), onClick = ::sendMessage
+          ), onClick = sendMessage
         ) {
-          Icon(Icons.Filled.Send, "Send the message")
+          Icon(Icons.Filled.Send, stringResource(R.string.send_message_icon_label))
         }
       }
     }
   )
 }
 
-@Preview()
+@Composable
+fun MessageScreen(
+  viewModel: MessageListViewModel = viewModel()
+) {
+  var currentText = remember { mutableStateOf("") }
+
+  fun sendMessage() {
+    val newMsg = Message(message = currentText.value, sent = Date())
+    viewModel.sendMessage(newMsg)
+    currentText.value = ""
+  }
+
+  val messages by viewModel.messages.observeAsState()
+
+  MessageScreenUI(
+    sendMessage = ::sendMessage,
+    currentText = currentText,
+    messages = messages ?: emptyList()
+  )
+}
+
+@Preview
 @Composable
 fun MessagesPreview() {
   NarwhalNotesTheme {
-    MessageScreen()
+    var currentText = remember { mutableStateOf("") }
+
+    val messages = (0..2).map {
+      val msg = LoremIpsum(Random.nextInt(3, 25)).values.joinToString(" ")
+      Message(
+        msg,
+        Date()
+      )
+    }
+
+    MessageScreenUI(messages = messages, currentText = currentText, sendMessage = {})
   }
 }
