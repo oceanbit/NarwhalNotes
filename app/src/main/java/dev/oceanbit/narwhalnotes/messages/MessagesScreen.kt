@@ -1,9 +1,7 @@
 package dev.oceanbit.narwhalnotes.messages
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.animation.*
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -18,6 +16,7 @@ import androidx.compose.material3.ButtonDefaults.textButtonColors
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,7 +46,12 @@ private fun ChatMessage(
   onPress: () -> Unit,
 ) {
   Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    SelectableCard(modifier = Modifier.fillMaxWidth(), selected = selected, onLongPress = onLongPress, onPress = onPress) {
+    SelectableCard(
+      modifier = Modifier.fillMaxWidth(),
+      selected = selected,
+      onLongPress = onLongPress,
+      onPress = onPress
+    ) {
       Text(text = message, modifier = Modifier.padding(16.dp))
     }
     Text(
@@ -117,22 +121,28 @@ fun MessageScreenUI(
           }
         },
         actions = {
-          when {
-            showMessageActions -> {
-              IconButton(onClick = onDelete) {
-                Icon(
-                  imageVector = Icons.Filled.Delete,
-                  contentDescription = stringResource(R.string.messages_delete_icon_label)
-                )
-              }
+          AnimatedVisibility(
+            visible = showMessageActions,
+            enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start),
+            exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start)
+          ) {
+            IconButton(onClick = onDelete) {
+              Icon(
+                imageVector = Icons.Filled.Delete,
+                contentDescription = stringResource(R.string.messages_delete_icon_label)
+              )
             }
-            !showMessageActions -> {
-              IconButton(onClick = { /* doSomething() */ }) {
-                Icon(
-                  imageVector = Icons.Filled.Search,
-                  contentDescription = stringResource(R.string.messages_search_icon_label)
-                )
-              }
+          }
+          AnimatedVisibility(
+            visible = !showMessageActions,
+            enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start),
+            exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start)
+          ) {
+            IconButton(onClick = { }) {
+              Icon(
+                imageVector = Icons.Filled.Search,
+                contentDescription = stringResource(R.string.messages_search_icon_label)
+              )
             }
           }
         }
