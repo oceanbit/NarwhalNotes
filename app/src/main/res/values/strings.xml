@@ -4,4 +4,5 @@
     <string name="send_message_icon_label">Send the message</string>
     <string name="messages_search_icon_label">Search through your notes</string>
     <string name="messages_settings_icon_label">Settings</string>
+    <string name="messages_delete_icon_label">Delete selected messages</string>
 </resources>

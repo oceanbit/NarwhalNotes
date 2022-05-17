@@ -19,5 +19,11 @@ class MessageListViewModel @Inject constructor(
     }
   }
 
+  fun deleteMessages(messages: List<Long>) {
+    viewModelScope.launch {
+      messageRepositoryPriv.deleteMessage(messages)
+    }
+  }
+
   val messages: LiveData<List<Message>> = messageRepository.getMessages().asLiveData()
 }

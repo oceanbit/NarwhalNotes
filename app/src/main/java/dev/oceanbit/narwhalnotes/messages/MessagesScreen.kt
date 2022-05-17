@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
@@ -97,9 +98,12 @@ fun MessageScreenUI(
   messages: List<Message>,
   selectedMessages: MutableList<Long>,
   sendMessage: () -> Unit,
+  onDelete: () -> Unit,
   currentText: MutableState<String>,
   listState: LazyListState? = null
 ) {
+  val showMessageActions = selectedMessages.size != 0
+
   Scaffold(
     topBar = {
       PrimarySmallTopAppBar(
@@ -113,11 +117,23 @@ fun MessageScreenUI(
           }
         },
         actions = {
-          IconButton(onClick = { /* doSomething() */ }) {
-            Icon(
-              imageVector = Icons.Filled.Search,
-              contentDescription = stringResource(R.string.messages_search_icon_label)
-            )
+          when {
+            showMessageActions -> {
+              IconButton(onClick = onDelete) {
+                Icon(
+                  imageVector = Icons.Filled.Delete,
+                  contentDescription = stringResource(R.string.messages_delete_icon_label)
+                )
+              }
+            }
+            !showMessageActions -> {
+              IconButton(onClick = { /* doSomething() */ }) {
+                Icon(
+                  imageVector = Icons.Filled.Search,
+                  contentDescription = stringResource(R.string.messages_search_icon_label)
+                )
+              }
+            }
           }
         }
       )
@@ -171,6 +187,11 @@ fun MessageScreen(
     }
   }
 
+  fun deleteMessages() {
+    viewModel.deleteMessages(selectedMessages.toList())
+    selectedMessages.clear()
+  }
+
   val messages by viewModel.messages.observeAsState()
 
   MessageScreenUI(
@@ -178,7 +199,8 @@ fun MessageScreen(
     currentText = currentText,
     messages = messages ?: emptyList(),
     listState = listState,
-    selectedMessages = selectedMessages
+    selectedMessages = selectedMessages,
+    onDelete = ::deleteMessages
   )
 }
 
@@ -202,6 +224,7 @@ fun MessagesPreview() {
       messages = messages,
       currentText = currentText,
       sendMessage = {},
+      onDelete = {},
       selectedMessages = selectedMessages
     )
   }

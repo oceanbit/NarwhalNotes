@@ -14,6 +14,6 @@ interface MessageDao {
   @Insert
   suspend fun insertMessage(message: Message)
 
-  @Delete
-  suspend fun deleteMessage(user: Message)
+  @Query("DELETE FROM message WHERE uid IN (:messageIds)")
+  suspend fun deleteMessages(messageIds: List<Long>): Void
 }

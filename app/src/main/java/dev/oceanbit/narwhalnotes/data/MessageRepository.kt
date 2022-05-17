@@ -17,6 +17,6 @@ class MessageRepository @Inject constructor(private val messageDao: MessageDao) 
   suspend fun createMessage(message: Message) =
     messageDao.insertMessage(message)
 
-  suspend fun deleteMessage(message: Message) =
-    messageDao.deleteMessage(message)
+  suspend fun deleteMessage(messages: List<Long>) =
+    messageDao.deleteMessages(messages)
 }
